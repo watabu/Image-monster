@@ -50,13 +50,24 @@ class Status:
         self.defence = 0
     
 class Battle:
-    def __init__(self, player):
+    #プレイヤーとエネミーを初期化でもらってくる
+    def __init__(self, player=None, enemy=None):
         #プレイヤーは初期化時に渡される？
-        self.player = player
+        #self.player = player
+        self.player = Monster(None)
+        #ステータスを決め打ちで決める
+        self.player.status = Status(0,0,0)
+
         #敵は固定
-        self.enemy = 0
+        self.enemy = Monster(None)
         #1ターン行動するボタン
         self.button_act = 0
+
+    def act_one_turn(self):
+        #プレイヤーが敵に攻撃する
+
+        #敵がプレイヤーに攻撃する
+        pass
 
     
     
