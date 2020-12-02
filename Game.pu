@@ -1,0 +1,43 @@
+@startuml Game
+' https://www.mum-meblog.com/entry/research-detail/plant_uml
+QMainWindow -> MonsterGenerator
+MonsterGenerator -right- Battle
+Battle "1" -- "2" Monster
+Monster -right- Status
+
+class MonsterGenerator{
+    -Image image
+    -Image crop_image
+    -Monster player
+
+    -Image capture()
+    -Image crop(Image image)
+    -Status generate_status(Image image)
+}
+
+class Battle{
+    -Monster player
+    -Monster enemy
+    -Button button_act
+    -void act_one_turn()
+    +void init(Monster player)
+}
+
+class Monster{
+    -Image image
+    -Status status
+    +void init(Image image, Status status)
+    +void TakeDamage(int atk)
+    
+}
+
+class Status{
+    +hp
+    +atk
+    +defence
+}
+
+class Image{
+    +3次元のndarray
+}
+@enduml

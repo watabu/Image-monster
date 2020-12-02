@@ -1,0 +1,6 @@
+ボタンなどの配置
+https://qiita.com/Nobu12/items/81da82b8b984bf54f0a0
+
+
+レイアウトの使い方
+https://www.xsim.info/articles/PySide/how-to-layout.html#QFormLayout
