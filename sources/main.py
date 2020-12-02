@@ -45,10 +45,10 @@ class MonsterGenerator:
 
 class Status:
     def __init__(self, hp=0, attack=0, defence=0):
-        self.hp = 0
-        self.attack = 0
-        self.defence = 0
-    
+        self.hp = hp
+        self.attack = attack
+        self.defence = defence
+
 class Battle:
     #プレイヤーとエネミーを初期化でもらってくる
     def __init__(self, player=None, enemy=None):
@@ -56,18 +56,34 @@ class Battle:
         #self.player = player
         self.player = Monster(None)
         #ステータスを決め打ちで決める
-        self.player.status = Status(0,0,0)
+        self.player.status = Status(20,5,25)
 
-        #敵は固定
+
         self.enemy = Monster(None)
+        #敵も決め打ち
+        self.enemy.status=Status(20,5,0)
         #1ターン行動するボタン
         self.button_act = 0
 
     def act_one_turn(self):
         #プレイヤーが敵に攻撃する
-
+        self.enemy.take_damage(self.damage_calculater(self.player.status.attack,self.enemy.status.defence))
+        print("tekinohp",max(self.enemy.status.hp,0))
+        self.end_check(self.enemy.status.hp,0)
         #敵がプレイヤーに攻撃する
-        pass
+        self.player.take_damage(self.damage_calculater(self.enemy.status.attack,self.player.status.defence))
+        print("mikatanohp",max(self.player.status.hp,0))
+        self.end_check(self.player.status.hp,1)
+            
+    def damage_calculater(self,attack,defence,power=1):
+        base=max(attack-defence,1)
+        damage=base*power
+        return damage
+        
+    def end_check(self,hp,side):
+        if hp<=0:
+            print("戦闘終了")
+            #その他、戦闘終了処理
 
     
     
@@ -78,8 +94,7 @@ class Monster:
         self.image = image
 
     def take_damage(self, attack):
-        self.status.hp = self.status.hp
-        
+        self.status.hp = self.status.hp-attack        
 
 
 
