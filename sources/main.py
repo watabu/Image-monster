@@ -50,12 +50,25 @@ class Status:
         self.defence = 0
     
 class Battle:
-    pass
+    def __init__(self, player):
+        #プレイヤーは初期化時に渡される？
+        self.player = player
+        #敵は固定
+        self.enemy = 0
+        #1ターン行動するボタン
+        self.button_act = 0
+
+    
+    
 
 class Monster:
     def __init__(self, image):
         self.status = Status()
         self.image = image
+
+    def take_damage(self, attack):
+        self.status.hp = self.status.hp
+        
 
 
 

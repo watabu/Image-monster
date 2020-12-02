@@ -26,7 +26,7 @@ class ImageViewer:
             image = cv2.resize(image , dsize=(self.w , self.h))
         
         height, width, dim = image.shape
-        bytesPerLine = dim * width        
+        bytesPerLine = dim * width
         self.imageLabel.resize(width, height)
 
         self.imageLabel.resize(width, height)
