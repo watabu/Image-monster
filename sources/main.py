@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 import random
 import cv2
 import numpy as np
+from math import log
 from View import ImageViewer
 
 #画像取り込み、切り抜き、ステータス生成をする
@@ -31,14 +32,85 @@ class MonsterGenerator:
         height, width, dim = image.shape
         return image[height//4 :height*3//4, width//4 :width*3//4,:]
 
+
     #ステータスを生成して返す
-    def generateStatus(self, image):
-        #TODO 画像によってステータスを生成する
-        return Status()
+    def generateStatus(self, image, debug=False):
+        #rgb成分の割合の算出
+        bgr_hist = image.T.sum(axis=1).sum(axis=1) 
+        bgr_hist = bgr_hist / max(sum(bgr_hist), 1)
+        
+        #グレースケール画像
+        image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) / 256
+        
+        #フーリエ変換・パワースペクトル画像の算出
+        f = np.fft.fft2(image_gray, axes=(0,1))
+        fshift = np.fft.fftshift(f)
+        foo = np.abs(fshift)
+        foo = np.where(foo < 1, 1, foo)
+        magnitude_spectrum = 20 * np.log(foo) 
+
+        h, w = magnitude_spectrum.shape
+        
+        #振幅の和
+        sum_spec = np.sum(magnitude_spectrum) / w / h
+        sum_spec = sum_spec if sum_spec > 0 else 1
+        
+        #中心の1/4部分
+        low = np.sum(magnitude_spectrum[h//4:h*3//4, w//4:w*3//4]) / w / h
+        #それ以外　外周の部分
+        high = sum_spec - low
+        
+        #それぞれの面積を考慮した値
+        high_std = high * 4 / 3 / sum_spec # 面積の3/4を占めるので 4/3倍
+        low_std = low * 4 / sum_spec # 面積の1/4を占めるので 4倍
+        
+        #単純な全体に占める割合
+        high_ratio = high / sum_spec
+        low_ratio = low / sum_spec
+        
+        #体力に関する定数値
+        hp_base1 = 100
+        hp_base2 = 1
+        hp_freq = (log(sum_spec) -hp_base2)
+        hp_color = (bgr_hist[1]/0.33)**2
+        
+        #攻撃力に関する定数値
+        attack_base = 100
+        attack_freq = high_ratio/0.5
+        attack_color = (bgr_hist[2]/0.33)**2
+        
+        #防御力に関する定数値
+        defence_base = 100
+        defence_freq = low_ratio/0.5
+        defence_color = (bgr_hist[0]/0.33)**2
+            
+        status = Status()
+        status.hp = max(1, round(hp_base1 * hp_freq * hp_color))
+        status.attack = max(1, round(attack_base * attack_freq * attack_color))
+        status.defence = max(1, round(defence_base * defence_freq * defence_color))
+        
+        if debug:
+            #テスト用の出力
+            print("bgr: " , bgr_hist)
+            # print("sum:", sum_spec, log(sum_spec))
+            # print("high:", high, high_ratio, high_std)
+            # print("low:", low, low_ratio, low_std)
+            
+            print("base * freq * color = value")
+            print("hp(green) info : %f * %f * %f = %d" % (hp_base1, hp_freq, hp_color, status.hp))
+            print("atk(red) info: %f * %f * %f = %d" % (attack_base, attack_freq, attack_color, status.attack))
+            print("def(blue) info: %f * %f * %f = %d" % (defence_base, defence_freq, defence_color, status.defence))
+
+            print("status:", status.hp, status.attack, status.defence)
+            print("")
+            
+        return status
+        
 
     def generateMonster(self, image):
         monster = Monster(self.crop(image))
-        monster.status = self.generateStatus(image)
+        #monster.status = self.generateStatus(image)
+        monster.status = self.generateStatus(image, True)
         return monster
 
 
@@ -104,6 +176,7 @@ class MyWindow(QMainWindow):
         self.generator = MonsterGenerator(self)
     
         self.initUI()
+        self.show()
 
     def initUI(self):
         self.resize(800, 600) 
@@ -126,7 +199,6 @@ class MyWindow(QMainWindow):
         #画像が表示される大きさを指定
         self.iconViewer.resize(200, 200)
 
-        self.show()
 
     def setImage(self, image):
         #画像を選択後に呼び出される

@@ -24,7 +24,8 @@ class ImageViewer:
     def setImage(self, image):
         if self.fixSize:
             image = cv2.resize(image , dsize=(self.w , self.h))
-        
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
         height, width, dim = image.shape
         bytesPerLine = dim * width
         self.imageLabel.resize(width, height)
