@@ -120,22 +120,27 @@ class Status:
         self.hp = hp
         self.attack = attack
         self.defence = defence
+    
+    def print(self):
+        print("status:", self.hp, self.attack, self.defence)
 
 class Battle:
     #プレイヤーとエネミーを初期化でもらってくる
     def __init__(self, player=None, enemy=None):
-        #プレイヤーは初期化時に渡される？
-        #self.player = player
-        self.player = Monster(None)
+        #プレイヤーは初期化時に渡される
+        self.player = player
+        
         #ステータスを決め打ちで決める
-        self.player.status = Status(20,5,25)
+        #self.player = Monster(None)
+        #self.player.status = Status(20,5,25)
 
-
-        self.enemy = Monster(None)
+        self.enemy = enemy
         #敵も決め打ち
-        self.enemy.status=Status(20,5,0)
+        #self.enemy = Monster(None)
+        #self.enemy.status=Status(20,5,0)
+        
         #1ターン行動するボタン
-        self.button_act = 0
+        self.button_act = None
 
     def act_one_turn(self):
         #プレイヤーが敵に攻撃する
@@ -161,8 +166,8 @@ class Battle:
     
 
 class Monster:
-    def __init__(self, image):
-        self.status = Status()
+    def __init__(self, image, status=Status()):
+        self.status = status
         self.image = image
 
     def take_damage(self, attack):
@@ -174,21 +179,46 @@ class MyWindow(QMainWindow):
     def __init__(self):
         super(MyWindow, self).__init__()
         self.generator = MonsterGenerator(self)
-    
+
+        self.width = 800
+        self.height = 600
+
         self.initUI()
         self.show()
 
     def initUI(self):
-        self.resize(800, 600) 
+        self.resize(self.width, self.height)
         self.setWindowTitle('Game')
         #ボタン生成・クリック時の挙動、座標設定
         captureButton = QPushButton('モンスター生成', self)
         captureButton.clicked.connect(self.generator.capture)
         captureButton.move(80,20)
 
+        self.actButton = QPushButton('たたかう', self)
+        self.actButton.clicked.connect(self.testAct)
+        self.actButton.move(550, 400)
+        self.actButton.setEnabled(False)
+
         #文字生成？
         label = QLabel("test", self)
         label.move(200, 20)
+
+        #ステータス表示
+        self.statusLabels = []
+        self.statusLabels.append(QLabel("hp: undefined", self))
+        self.statusLabels.append(QLabel("attack: undefined", self))
+        self.statusLabels.append(QLabel("defence: undefined", self))
+        for i in range(0, 3):
+            self.statusLabels[i].move(450 , 320 + i*20)
+
+        #テスト用の敵表示
+        self.enemyStatusLabels = []
+        self.enemyStatusLabels.append(QLabel("hp: undefined", self))
+        self.enemyStatusLabels.append(QLabel("attack: undefined", self))
+        self.enemyStatusLabels.append(QLabel("defence: undefined", self))
+        for i in range(0, 3):
+            self.enemyStatusLabels[i].move(600 , 320 + i*20)
+
 
         #画像生成　self.show()の前に作っておかないと表示されない＜ーなんで？
         self.imageViewer = ImageViewer(self, x=50, y=100)
@@ -208,9 +238,39 @@ class MyWindow(QMainWindow):
 
         self.imageViewer.setImage(image)
         self.iconViewer.setImage(self.player.image)
+
+        self.statusLabels[0].setText("hp: %d" % (self.player.status.hp))
+        self.statusLabels[1].setText("attack: %d" %(self.player.status.attack))
+        self.statusLabels[2].setText("defence: %d" %(self.player.status.defence))
+
+        self.initBattle()
+
+    def initBattle(self):
+        player = self.player
+
+        enemyImage = cv2.imread("./sources/test.png")
+        enemyStatus = self.generator.generateStatus(enemyImage)
+        enemy = Monster(enemyImage, enemyStatus)
+
+        self.battle = Battle(player, enemy)
+        self.updateLabels(self.battle.player, self.battle.enemy)
+        self.actButton.setEnabled(True)
         
-        
-        
+    def testAct(self):
+        if (self.battle is None):
+            return
+        self.battle.act_one_turn()
+        self.updateLabels(self.battle.player, self.battle.enemy)
+
+
+    def updateLabels(self, player, enemy):
+        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
+        self.statusLabels[1].setText("attack: %d" %(player.status.attack))
+        self.statusLabels[2].setText("defence: %d" %(player.status.defence))
+
+        self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
+        self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
+        self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
 
 def main():
     app = QApplication(sys.argv)
