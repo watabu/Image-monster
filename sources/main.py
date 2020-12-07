@@ -173,7 +173,7 @@ class Monster:
         self.image = image
 
     def take_damage(self, attack):
-        self.status.hp = self.status.hp-attack        
+        self.status.hp = max(0,self.status.hp-attack)       
 
 
 
@@ -266,11 +266,11 @@ class MyWindow(QMainWindow):
 
 
     def updateLabels(self, player, enemy):
-        self.statusLabels[0].setText("hp: %d" % max(0,(player.status.hp)))
+        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
         self.statusLabels[1].setText("attack: %d" %(player.status.attack))
         self.statusLabels[2].setText("defence: %d" %(player.status.defence))
 
-        self.enemyStatusLabels[0].setText("hp: %d" % max(0,(enemy.status.hp)))
+        self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
         self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
         self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
 
