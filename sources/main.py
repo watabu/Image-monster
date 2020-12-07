@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 import random
 import cv2
 import numpy as np
+import math
 from math import log
 from View import ImageViewer
 
@@ -154,13 +155,14 @@ class Battle:
             
     def damage_calculater(self,attack,defence,power=1):
         base=max(attack-defence,1)
-        damage=base*power
+        rando=random.uniform(0.85,1.15)
+        damage=math.ceil(base*power*rando)
         return damage
         
     def end_check(self,hp,side):
         if hp<=0:
             print("戦闘終了")
-            #その他、戦闘終了処理
+            #TODO その他、戦闘終了処理
 
     
     
@@ -264,11 +266,11 @@ class MyWindow(QMainWindow):
 
 
     def updateLabels(self, player, enemy):
-        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
+        self.statusLabels[0].setText("hp: %d" % max(0,(player.status.hp)))
         self.statusLabels[1].setText("attack: %d" %(player.status.attack))
         self.statusLabels[2].setText("defence: %d" %(player.status.defence))
 
-        self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
+        self.enemyStatusLabels[0].setText("hp: %d" % max(0,(enemy.status.hp)))
         self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
         self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
 
