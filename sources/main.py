@@ -171,9 +171,9 @@ class Battle:
             self.enemy.take_damage(self.damage_calculator(self.player,self.enemy))
             print("tekinohp",max(self.enemy.status.hp,0))
         if command==1:
-            self.player.status.attack=math.ceil(self.player.status.attack*2)
+            self.player.status.attack=math.ceil(self.player.status.attack*1.5)
         if command==2:
-            self.player.status.defence=math.ceil(self.player.status.defence*2)
+            self.player.status.defence=math.ceil(self.player.status.defence*1.5)
         if command==3:
             self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
         if command==4:
