@@ -165,7 +165,7 @@ class Battle:
 
         #プレイヤーが敵に攻撃する
         if command==0:
-            self.enemy.take_damage(self.damage_calculator(self.player.status.attack,self.enemy.status.defence))
+            self.enemy.take_damage(self.damage_calculator(self.player,self.enemy))
             print("tekinohp",max(self.enemy.status.hp,0))
         if command==1:
             self.player.status.attack=math.ceil(self.player.status.attack*2)
@@ -176,12 +176,12 @@ class Battle:
         if command==4:
             self.enemy.status.attack=math.ceil(self.enemy.status.attack*0.8)
         if command==5:
-            self.enemy.take_damage(self.damage_calculator(self.player.status.attack,self.enemy.status.defence,1.5))
+            self.enemy.take_damage(self.damage_calculator(self.player, self.enemy,1.5))
         if(self.enemy.isDead()):
             return 1
 
         #敵がプレイヤーに攻撃する
-        self.player.take_damage(self.damage_calculater(self.enemy, self.player))
+        self.player.take_damage(self.damage_calculator(self.enemy, self.player))
         print("mikatanohp",max(self.player.status.hp,0))
         #self.end_check(self.player.status.hp,1)
         if(self.player.isDead()):
@@ -192,7 +192,7 @@ class Battle:
 
         return 0
             
-    def damage_calculater(self,attacker, defencer, power=1):
+    def damage_calculator(self,attacker, defencer, power=1):
         attack = attacker.status.attack
         defence = defencer.status.defence
 
