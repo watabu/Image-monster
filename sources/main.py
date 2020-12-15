@@ -132,10 +132,11 @@ class MonsterGenerator:
 
 
 class Status:
-    def __init__(self, hp=0, attack=0, defence=0):
+    def __init__(self, hp=0, attack=0, defence=0,command=1):
         self.hp = hp
         self.attack = attack
         self.defence = defence
+        self.command=((attack+defence)%5)+1
     
     def print(self):
         print("status:", self.hp, self.attack, self.defence)
