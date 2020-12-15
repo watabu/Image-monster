@@ -104,6 +104,7 @@ class MonsterGenerator:
         status.hp = max(1, round(hp_base1 * hp_freq * hp_color))
         status.attack = max(1, round(attack_base * attack_freq * attack_color))
         status.defence = max(1, round(defence_base * defence_freq * defence_color))
+        status.command=((status.attack+status.defence)%5)+1
         
         if debug:
             #テスト用の出力
@@ -117,7 +118,7 @@ class MonsterGenerator:
             print("atk(red) info: %f * %f * %f = %d" % (attack_base, attack_freq, attack_color, status.attack))
             print("def(blue) info: %f * %f * %f = %d" % (defence_base, defence_freq, defence_color, status.defence))
 
-            print("status:", status.hp, status.attack, status.defence)
+            print("status:", status.hp, status.attack, status.defence,status.command)
             print("")
             
         return status
@@ -262,7 +263,7 @@ class MyWindow(QMainWindow):
         self.actButton.move(450, 440)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
-        self.actButton2.clicked.connect(self.testAct(self.battle.player.status.command))
+        self.actButton2.clicked.connect(self.testAct2())
         self.actButton2.move(600, 440)
         self.actButton2.setEnabled(False)
 
