@@ -33,7 +33,34 @@ class MonsterGenerator:
     def crop(self, image):
         #TODO 切り抜き方法を工夫する
         height, width, dim = image.shape
-        return image[height//4 :height*3//4, width//4 :width*3//4,:]
+
+        # 0: Background (cv2.GC_BGD)
+        # 1: Foreground (cv2.GC_FGD)
+        # 2: Probably Background (cv2.GC_PR_BGD)
+        # 3: Probably Foreground (cv2.GC_PR_FGD)
+        maskGC = np.zeros(image.shape[:2], np.uint8)
+
+        modelShape = (1, 65) # this value should not be changed
+
+        bgdModel = np.zeros(modelShape, np.float64)
+        fgdModel = np.zeros(modelShape, np.float64)
+
+        paddingX = 30
+        paddingY = 30
+        rect = (paddingX, paddingY, width-paddingX, height-paddingY)
+
+        itrCnt = 10
+
+        print('crop: grabCut started')
+        cv2.grabCut(image, maskGC, rect, bgdModel, fgdModel, itrCnt, cv2.GC_INIT_WITH_RECT)
+        # cv2.grabCut(img, mask, rect, bgdModel, fgdModel, itrCnt, cv2.GC_INIT_WITH_MASK)
+        print('crop: grabCut finished')
+
+        mask = np.where((maskGC==0)|(maskGC==2), 0, 1).astype('uint8')
+
+        return image * mask[:,:,np.newaxis]
+
+        # return image[height//4 :height*3//4, width//4 :width*3//4,:]
 
     def grabcut(self, image):
         pass
