@@ -253,17 +253,27 @@ class MyWindow(QMainWindow):
         self.actButton.clicked.connect(self.testAct)
         self.actButton.move(450, 440)
         self.actButton.setEnabled(False)
+        self.actButton2 = QPushButton('たたかう2', self)
+        #self.actButton2.clicked.connect(self.testAct)
+        self.actButton2.move(600, 440)
+        self.actButton2.setEnabled(False)
+
+        #結果
+        self.resultLabel = QLabel("", self)
+        self.resultLabel.move(450, 500)
+        self.resultLabel.resize(300, 30)
 
         #文字生成？
-        label = QLabel("test", self)
-        label.move(200, 20)
+
+        #label = QLabel("test", self)
+        #label.move(200, 20)
 
         #ステータス表示
         QLabel("player", self).move(450, 320)
         self.statusLabels = []
-        self.statusLabels.append(QLabel("hp: undefined", self))
-        self.statusLabels.append(QLabel("attack: undefined", self))
-        self.statusLabels.append(QLabel("defence: undefined", self))
+        self.statusLabels.append(QLabel("<font color=#090> hp: undefined</font>", self))
+        self.statusLabels.append(QLabel("<font color=#900> attack: undefined</font>", self))
+        self.statusLabels.append(QLabel("<font color=#009> defense: undefined</font>", self))
         self.statusLabels.append(QLabel("", self))
         for i in range(0, 4):
             self.statusLabels[i].move(450 , 340 + i*20)
@@ -272,9 +282,9 @@ class MyWindow(QMainWindow):
         #テスト用の敵表示
         QLabel("enemy", self).move(600, 320)
         self.enemyStatusLabels = []
-        self.enemyStatusLabels.append(QLabel("hp: undefined", self))
-        self.enemyStatusLabels.append(QLabel("attack: undefined", self))
-        self.enemyStatusLabels.append(QLabel("defence: undefined", self))
+        self.enemyStatusLabels.append(QLabel("<font color=#090> hp: undefined</font>", self))
+        self.enemyStatusLabels.append(QLabel("<font color=#900> attack: undefined</font>", self))
+        self.enemyStatusLabels.append(QLabel("<font color=#009> defense: undefined</font>", self))
         self.enemyStatusLabels.append(QLabel("", self))
         for i in range(0, 4):
             self.enemyStatusLabels[i].move(600 , 340 + i*20)
@@ -300,7 +310,7 @@ class MyWindow(QMainWindow):
 
         self.statusLabels[0].setText("hp: %d" % (self.player.status.hp))
         self.statusLabels[1].setText("attack: %d" %(self.player.status.attack))
-        self.statusLabels[2].setText("defence: %d" %(self.player.status.defence))
+        self.statusLabels[2].setText("defense: %d" %(self.player.status.defence))
 
         self.initBattle()
 
@@ -314,6 +324,8 @@ class MyWindow(QMainWindow):
         self.battle = Battle(player, enemy)
         self.updateLabels(self.battle.player, self.battle.enemy)
         self.actButton.setEnabled(True)
+        self.actButton2.setEnabled(True)
+        self.resultLabel.setEnabled(False)
         
     def testAct(self):
         if (self.battle is None):
@@ -322,35 +334,47 @@ class MyWindow(QMainWindow):
         self.updateLabels(self.battle.player, self.battle.enemy)
         #loop = asyncio.get_event_loop()
         #loop.run_until_complete(self.updateLabelsDelay(self.battle.player, self.battle.enemy, 1))
+        if(res != 0):
+            self.actButton.setEnabled(False)
+            self.actButton2.setEnabled(False)
+            self.resultLabel.setEnabled(True)
         if (res == 1):
             print("味方のかち")
+            self.resultLabel.setText('<font color="RED"><h1>YOU WIN!<h1></font>')
+            #self.resultLabel.text = 'YOU WIN!!!'
         elif (res == 2):
             print("敵のかち")
+            self.resultLabel.setText('<font color="BLUE"><h1>YOU LOSE...<h1></font>')
+            #self.resultLabel.text = 'YOU LOSE...'
 
     def updateLabels(self, player, enemy):
-        self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
-        self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
-        self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
+        self.enemyStatusLabels[0].setText(colorize("hp: %d" %(enemy.status.hp), "090"))
+        self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.attack), "900"))
+        self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.defence), "009"))
         self.enemyStatusLabels[3].setText(enemy.attackResult)
 
-        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
-        self.statusLabels[1].setText("attack: %d" %(player.status.attack))
-        self.statusLabels[2].setText("defence: %d" %(player.status.defence))
+        self.statusLabels[0].setText(colorize("hp: %d" %(player.status.hp), "090"))
+        self.statusLabels[1].setText(colorize("attack: %d" %(player.status.attack), "900"))
+        self.statusLabels[2].setText(colorize("defense: %d" %(player.status.defence), "009"))
         self.statusLabels[3].setText(player.attackResult)
     
     #非同期的に処理をして、敵のHP減少ー＞味方のHP減少　にしたかった。
     async def updateLabelsDelay(self, player, enemy, delay=0.25):
         self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
         self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
-        self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
+        self.enemyStatusLabels[2].setText("defense: %d" %(enemy.status.defence))
         #await asyncio.sleep(delay)
         task = asyncio.create_task(asyncio.sleep(delay))
         await task
 
         self.statusLabels[0].setText("hp: %d" % (player.status.hp))
         self.statusLabels[1].setText("attack: %d" %(player.status.attack))
-        self.statusLabels[2].setText("defence: %d" %(player.status.defence))
+        self.statusLabels[2].setText("defense: %d" %(player.status.defence))
     
+def colorize(str, color):
+    return "<font color=#" + color + ">"+str+"</font>"
+
+
 def main():
     app = QApplication(sys.argv)
     w = MyWindow()
