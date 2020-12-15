@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import math
 import asyncio
+import time
 from math import log
 from View import ImageViewer
 
@@ -187,8 +188,8 @@ class Battle:
         if(self.player.isDead()):
             return 2
         
-        print("player: ", self.player.attackResult)
-        print("enemy: ", self.enemy.attackResult)
+        #print("player: ", self.player.attackResult)
+        #print("enemy: ", self.enemy.attackResult)
 
         return 0
             
@@ -320,9 +321,9 @@ class MyWindow(QMainWindow):
         self.imageViewer.setImage(image)
         self.iconViewer.setImage(self.player.image)
 
-        self.statusLabels[0].setText("hp: %d" % (self.player.status.hp))
-        self.statusLabels[1].setText("attack: %d" %(self.player.status.attack))
-        self.statusLabels[2].setText("defense: %d" %(self.player.status.defence))
+        self.statusLabels[0].setText(colorize("hp: %d" %(self.player.status.hp), "090"))
+        self.statusLabels[1].setText(colorize("attack: %d" %(self.player.status.attack), "900"))
+        self.statusLabels[2].setText(colorize("defense: %d" %(self.player.status.defence), "009"))
 
         self.initBattle()
 
@@ -334,54 +335,71 @@ class MyWindow(QMainWindow):
         enemy = Monster(enemyImage, enemyStatus)
 
         self.battle = Battle(player, enemy)
-        self.updateLabels(self.battle.player, self.battle.enemy)
         self.actButton.setEnabled(True)
         self.actButton2.setEnabled(True)
-        self.resultLabel.setEnabled(False)
+        self.resultLabel.setText("")
+        self.updateLabels(self.battle.player, self.battle.enemy)
         
     def testAct(self):
         if (self.battle is None):
             return
         res = self.battle.act_one_turn()
-        self.updateLabels(self.battle.player, self.battle.enemy)
+        
+        self.updateLabels(self.battle.player, self.battle.enemy, res, 0.5)
+        #asyncio.ensure_future(self.updateLabelsDelay(self.battle.player, self.battle.enemy, 1))
         #loop = asyncio.get_event_loop()
-        #loop.run_until_complete(self.updateLabelsDelay(self.battle.player, self.battle.enemy, 1))
-        if(res != 0):
-            self.actButton.setEnabled(False)
-            self.actButton2.setEnabled(False)
-            self.resultLabel.setEnabled(True)
-        if (res == 1):
-            print("味方のかち")
-            self.resultLabel.setText('<font color="RED"><h1>YOU WIN!<h1></font>')
-            #self.resultLabel.text = 'YOU WIN!!!'
-        elif (res == 2):
-            print("敵のかち")
-            self.resultLabel.setText('<font color="BLUE"><h1>YOU LOSE...<h1></font>')
-            #self.resultLabel.text = 'YOU LOSE...'
+        #loop.run_until_complete(self.updateLabelsDelay(self.battle.player, self.battle.enemy,res, 1))
 
-    def updateLabels(self, player, enemy):
+    def updateLabels(self, player, enemy, res=0, delay=1):
+        self.statusLabels[3].setText("waiting..")
+        self.actButton.setEnabled(False)
+        self.actButton2.setEnabled(False)
+
         self.enemyStatusLabels[0].setText(colorize("hp: %d" %(enemy.status.hp), "090"))
         self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.attack), "900"))
         self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.defence), "009"))
         self.enemyStatusLabels[3].setText(enemy.attackResult)
-
+        if (res == 1):
+            print("味方のかち")
+            self.resultLabel.setText('<font color="RED"><h1>YOU WIN!<h1></font>')
+            self.resultLabel.setEnabled(True)
+        QCoreApplication.processEvents()
+        time.sleep(delay)
+        
         self.statusLabels[0].setText(colorize("hp: %d" %(player.status.hp), "090"))
         self.statusLabels[1].setText(colorize("attack: %d" %(player.status.attack), "900"))
         self.statusLabels[2].setText(colorize("defense: %d" %(player.status.defence), "009"))
         self.statusLabels[3].setText(player.attackResult)
+        if (res == 2):
+            print("敵のかち")
+            self.resultLabel.setText('<font color="BLUE"><h1>YOU LOSE...<h1></font>')
+            self.resultLabel.setEnabled(True)
+
+        if(res == 0):
+            self.actButton.setEnabled(True)
+            self.actButton2.setEnabled(True)
     
     #非同期的に処理をして、敵のHP減少ー＞味方のHP減少　にしたかった。
-    async def updateLabelsDelay(self, player, enemy, delay=0.25):
-        self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
-        self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
-        self.enemyStatusLabels[2].setText("defense: %d" %(enemy.status.defence))
-        #await asyncio.sleep(delay)
-        task = asyncio.create_task(asyncio.sleep(delay))
-        await task
+    # async def updateLabelsDelay(self, player, enemy, res= 0, delay=0.25):
+    #     self.enemyStatusLabels[0].setText(colorize("hp: %d" %(enemy.status.hp), "090"))
+    #     self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.attack), "900"))
+    #     self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.defence), "009"))
+    #     self.enemyStatusLabels[3].setText(enemy.attackResult)
+    #     if (res == 1):
+    #         print("味方のかち")
+    #         self.resultLabel.setText('<font color="RED"><h1>YOU WIN!<h1></font>')
+    #     QCoreApplication.processEvents()
+    #     await asyncio.sleep(delay)
+    #     #task = asyncio.create_task(asyncio.sleep(delay))
+    #     #await task
 
-        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
-        self.statusLabels[1].setText("attack: %d" %(player.status.attack))
-        self.statusLabels[2].setText("defense: %d" %(player.status.defence))
+    #     self.statusLabels[0].setText(colorize("hp: %d" %(player.status.hp), "090"))
+    #     self.statusLabels[1].setText(colorize("attack: %d" %(player.status.attack), "900"))
+    #     self.statusLabels[2].setText(colorize("defense: %d" %(player.status.defence), "009"))
+    #     self.statusLabels[3].setText(player.attackResult)
+    #     if (res == 2):
+    #         print("敵のかち")
+    #         self.resultLabel.setText('<font color="BLUE"><h1>YOU LOSE...<h1></font>')
     
 def colorize(str, color):
     return "<font color=#" + color + ">"+str+"</font>"
