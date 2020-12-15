@@ -154,9 +154,23 @@ class Battle:
         self.end_check(self.player.status.hp,1)
             
     def damage_calculater(self,attack,defence,power=1):
+         rando=random.uniform(0.5,1.5)
         base=max(attack-defence,1)
-        rando=random.uniform(0.85,1.15)
-        damage=math.ceil(base*power*rando)
+        cri=random.randrange(200)
+        ddg=random.randrange(100)
+        if cri>=attack+50:
+            base=max(attack,1)
+            crit=1.5
+            print("critical!")
+        else:
+            crit=1
+        if ddg<=defence/2:
+            dodge=0
+            print("dodge!")
+        else:
+            dodge=1
+        
+        damage=math.ceil(base*rando*power*crit)*dodge
         return damage
         
     def end_check(self,hp,side):
