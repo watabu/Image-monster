@@ -218,7 +218,7 @@ class Battle:
         else:
             dodge=1
         
-        damagebase=max(math.ceil(base*rando*power+geta),1)
+        damagebase=max(math.ceil((base*rando+geta)*power),1)
         damage=math.ceil(damagebase*crit)*dodge
         return damage
     
