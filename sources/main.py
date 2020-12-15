@@ -195,6 +195,7 @@ class Battle:
             return -1
         self.player.attackResult = ""
         self.enemy.attackResult = ""
+        self.player.currentCommand = command
 
         #プレイヤーが敵に攻撃する
         if command==0:
@@ -215,8 +216,10 @@ class Battle:
 
         #敵がプレイヤーに攻撃する
         if random.randrange(2)==1:
+            self.enemy.currentCommand = 0
             self.player.take_damage(self.damage_calculator(self.enemy, self.player))
         else:
+            self.enemy.currentCommand = self.enemy.status.command
             if self.enemy.status.command==1:
                 self.enemy.status.attack=math.ceil(self.enemy.status.attack*1.5)
             if self.enemy.status.command==2:
@@ -272,6 +275,7 @@ class Monster:
         self.status = status
         self.image = image
         self.attackResult = ""
+        self.currentCommand = ""
 
     def take_damage(self, attack):
         self.status.hp = max(0,self.status.hp-attack)
@@ -303,12 +307,12 @@ class MyWindow(QMainWindow):
 
         self.actButton = QPushButton('たたかう', self)
         self.actButton.clicked.connect(self.testAct)
-        self.actButton.move(430, 440)
+        self.actButton.move(430, 460)
         self.actButton.resize(130, 30)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
         self.actButton2.clicked.connect(self.testAct2)
-        self.actButton2.move(600, 440)
+        self.actButton2.move(600, 460)
         self.actButton2.resize(130, 30)
         self.actButton2.setEnabled(False)
 
@@ -324,7 +328,8 @@ class MyWindow(QMainWindow):
         self.statusLabels.append(QLabel("<font color=#900> attack: undefined</font>", self))
         self.statusLabels.append(QLabel("<font color=#009> defense: undefined</font>", self))
         self.statusLabels.append(QLabel("", self))
-        for i in range(0, 4):
+        self.statusLabels.append(QLabel("", self))
+        for i in range(0, 5):
             self.statusLabels[i].move(450 , 340 + i*20)
         
 
@@ -335,9 +340,11 @@ class MyWindow(QMainWindow):
         self.enemyStatusLabels.append(QLabel("<font color=#900> attack: undefined</font>", self))
         self.enemyStatusLabels.append(QLabel("<font color=#009> defense: undefined</font>", self))
         self.enemyStatusLabels.append(QLabel("", self))
-        for i in range(0, 4):
+        self.enemyStatusLabels.append(QLabel("", self))
+        for i in range(0, 5):
             self.enemyStatusLabels[i].move(600 , 340 + i*20)
-        QLabel("", self).move(450, 410)
+        
+        #QLabel("", self).move(450, 410)
 
         #画像生成　self.show()の前に作っておかないと表示されない＜ーなんで？
         self.imageViewer = ImageViewer(self, x=50, y=100)
@@ -405,6 +412,7 @@ class MyWindow(QMainWindow):
         self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.attack), "900"))
         self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.defence), "009"))
         self.enemyStatusLabels[3].setText(enemy.attackResult)
+        self.enemyStatusLabels[4].setText(id2SkillName(enemy.currentCommand))
         if (res == 1):
             print("味方のかち")
             self.resultLabel.setText('<font color="RED"><h1>YOU WIN!<h1></font>')
@@ -416,6 +424,7 @@ class MyWindow(QMainWindow):
         self.statusLabels[1].setText(colorize("attack: %d" %(player.status.attack), "900"))
         self.statusLabels[2].setText(colorize("defense: %d" %(player.status.defence), "009"))
         self.statusLabels[3].setText(player.attackResult)
+        self.statusLabels[4].setText(id2SkillName(player.currentCommand))
         if (res == 2):
             print("敵のかち")
             self.resultLabel.setText('<font color="BLUE"><h1>YOU LOSE...<h1></font>')
@@ -451,16 +460,18 @@ def colorize(str, color):
     return "<font color=#" + color + ">"+str+"</font>"
 
 def id2SkillName(id):
+    if id == 0:
+        return "こうげき"
     if id == 1:
-        return "腕立て伏せ(攻撃UP)"
+        return "腕立て伏せ\n(攻撃UP)"
     if id == 2:
-        return "腹筋(防御UP)"
+        return "腹筋\n(防御UP)"
     if id == 3:
-        return "王水(防御DOWN)"
+        return "王水\n(防御DOWN)"
     if id == 4:
-        return "くすぐる(攻撃DOWN)"
+        return "くすぐる\n(攻撃DOWN)"
     if id == 5:
-        return "100tハンマー"
+        return "もろばぎり\n(反動つき大ダメージ)"
     
 
 
