@@ -157,7 +157,7 @@ class Battle:
         #1ターン行動するボタン
         self.button_act = None
 
-    def act_one_turn(self):
+    def act_one_turn(self,command=0):
         if self.player.isDead() or self.enemy.isDead():
             return -1
         self.player.attackResult = ""
