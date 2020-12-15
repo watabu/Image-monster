@@ -6,6 +6,7 @@ import random
 import cv2
 import numpy as np
 import math
+import asyncio
 from math import log
 from View import ImageViewer
 
@@ -157,17 +158,35 @@ class Battle:
         self.button_act = None
 
     def act_one_turn(self):
+        if self.player.isDead() or self.enemy.isDead():
+            return -1
+        self.player.attackResult = ""
+        self.enemy.attackResult = ""
+
         #プレイヤーが敵に攻撃する
-        self.enemy.take_damage(self.damage_calculater(self.player.status.attack,self.enemy.status.defence))
+        self.enemy.take_damage(self.damage_calculater(self.player,self.enemy))
         print("tekinohp",max(self.enemy.status.hp,0))
-        self.end_check(self.enemy.status.hp,0)
+        #self.end_check(self.enemy.status.hp,0)
+        if(self.enemy.isDead()):
+            return 1
+
         #敵がプレイヤーに攻撃する
-        self.player.take_damage(self.damage_calculater(self.enemy.status.attack,self.player.status.defence))
+        self.player.take_damage(self.damage_calculater(self.enemy, self.player))
         print("mikatanohp",max(self.player.status.hp,0))
-        self.end_check(self.player.status.hp,1)
+        #self.end_check(self.player.status.hp,1)
+        if(self.player.isDead()):
+            return 2
+        
+        print("player: ", self.player.attackResult)
+        print("enemy: ", self.enemy.attackResult)
+
+        return 0
             
-    def damage_calculater(self,attack,defence,power=1):
-         rando=random.uniform(0.5,1.5)
+    def damage_calculater(self,attacker, defencer, power=1):
+        attack = attacker.status.attack
+        defence = defencer.status.defence
+
+        rando=random.uniform(0.5,1.5)
         base=max(attack-defence,1)
         cri=random.randrange(200)
         ddg=random.randrange(100)
@@ -175,11 +194,13 @@ class Battle:
             base=max(attack,1)
             crit=1.5
             print("critical!")
+            attacker.attackResult ="critical!" 
         else:
             crit=1
         if ddg<=defence/2:
             dodge=0
             print("dodge!")
+            defencer.attackResult ="dodge!"
         else:
             dodge=1
         
@@ -198,9 +219,13 @@ class Monster:
     def __init__(self, image, status=Status()):
         self.status = status
         self.image = image
+        self.attackResult = ""
 
     def take_damage(self, attack):
-        self.status.hp = max(0,self.status.hp-attack)       
+        self.status.hp = max(0,self.status.hp-attack)
+
+    def isDead(self):
+        return self.status.hp <= 0
 
 
 
@@ -239,8 +264,10 @@ class MyWindow(QMainWindow):
         self.statusLabels.append(QLabel("hp: undefined", self))
         self.statusLabels.append(QLabel("attack: undefined", self))
         self.statusLabels.append(QLabel("defence: undefined", self))
-        for i in range(0, 3):
+        self.statusLabels.append(QLabel("", self))
+        for i in range(0, 4):
             self.statusLabels[i].move(450 , 340 + i*20)
+        
 
         #テスト用の敵表示
         QLabel("enemy", self).move(600, 320)
@@ -248,9 +275,10 @@ class MyWindow(QMainWindow):
         self.enemyStatusLabels.append(QLabel("hp: undefined", self))
         self.enemyStatusLabels.append(QLabel("attack: undefined", self))
         self.enemyStatusLabels.append(QLabel("defence: undefined", self))
-        for i in range(0, 3):
+        self.enemyStatusLabels.append(QLabel("", self))
+        for i in range(0, 4):
             self.enemyStatusLabels[i].move(600 , 340 + i*20)
-
+        QLabel("", self).move(450, 410)
 
         #画像生成　self.show()の前に作っておかないと表示されない＜ーなんで？
         self.imageViewer = ImageViewer(self, x=50, y=100)
@@ -290,19 +318,39 @@ class MyWindow(QMainWindow):
     def testAct(self):
         if (self.battle is None):
             return
-        self.battle.act_one_turn()
+        res = self.battle.act_one_turn()
         self.updateLabels(self.battle.player, self.battle.enemy)
-
+        #loop = asyncio.get_event_loop()
+        #loop.run_until_complete(self.updateLabelsDelay(self.battle.player, self.battle.enemy, 1))
+        if (res == 1):
+            print("味方のかち")
+        elif (res == 2):
+            print("敵のかち")
 
     def updateLabels(self, player, enemy):
-        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
-        self.statusLabels[1].setText("attack: %d" %(player.status.attack))
-        self.statusLabels[2].setText("defence: %d" %(player.status.defence))
-
         self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
         self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
         self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
+        self.enemyStatusLabels[3].setText(enemy.attackResult)
 
+        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
+        self.statusLabels[1].setText("attack: %d" %(player.status.attack))
+        self.statusLabels[2].setText("defence: %d" %(player.status.defence))
+        self.statusLabels[3].setText(player.attackResult)
+    
+    #非同期的に処理をして、敵のHP減少ー＞味方のHP減少　にしたかった。
+    async def updateLabelsDelay(self, player, enemy, delay=0.25):
+        self.enemyStatusLabels[0].setText("hp: %d" % (enemy.status.hp))
+        self.enemyStatusLabels[1].setText("attack: %d" %(enemy.status.attack))
+        self.enemyStatusLabels[2].setText("defence: %d" %(enemy.status.defence))
+        #await asyncio.sleep(delay)
+        task = asyncio.create_task(asyncio.sleep(delay))
+        await task
+
+        self.statusLabels[0].setText("hp: %d" % (player.status.hp))
+        self.statusLabels[1].setText("attack: %d" %(player.status.attack))
+        self.statusLabels[2].setText("defence: %d" %(player.status.defence))
+    
 def main():
     app = QApplication(sys.argv)
     w = MyWindow()
