@@ -33,6 +33,19 @@ class MonsterGenerator:
         height, width, dim = image.shape
         return image[height//4 :height*3//4, width//4 :width*3//4,:]
 
+    def grabcut(self, image):
+        pass
+
+    def convertImage(self, image, mask=None):
+        if mask is None:
+            return image
+
+        bgrAverage = image[mask == 1].T
+
+        colorAverage = np.average(image[mask], axis=0)
+        image[mask == 0] = colorAverage
+        
+        return image
 
     #ステータスを生成して返す
     def generateStatus(self, image, debug=False):
@@ -190,6 +203,7 @@ class MyWindow(QMainWindow):
 
     def initUI(self):
         self.resize(self.width, self.height)
+        self.setFixedSize(self.size())
         self.setWindowTitle('Game')
         #ボタン生成・クリック時の挙動、座標設定
         captureButton = QPushButton('モンスター生成', self)
@@ -198,7 +212,7 @@ class MyWindow(QMainWindow):
 
         self.actButton = QPushButton('たたかう', self)
         self.actButton.clicked.connect(self.testAct)
-        self.actButton.move(550, 400)
+        self.actButton.move(450, 440)
         self.actButton.setEnabled(False)
 
         #文字生成？
@@ -206,20 +220,22 @@ class MyWindow(QMainWindow):
         label.move(200, 20)
 
         #ステータス表示
+        QLabel("player", self).move(450, 320)
         self.statusLabels = []
         self.statusLabels.append(QLabel("hp: undefined", self))
         self.statusLabels.append(QLabel("attack: undefined", self))
         self.statusLabels.append(QLabel("defence: undefined", self))
         for i in range(0, 3):
-            self.statusLabels[i].move(450 , 320 + i*20)
+            self.statusLabels[i].move(450 , 340 + i*20)
 
         #テスト用の敵表示
+        QLabel("enemy", self).move(600, 320)
         self.enemyStatusLabels = []
         self.enemyStatusLabels.append(QLabel("hp: undefined", self))
         self.enemyStatusLabels.append(QLabel("attack: undefined", self))
         self.enemyStatusLabels.append(QLabel("defence: undefined", self))
         for i in range(0, 3):
-            self.enemyStatusLabels[i].move(600 , 320 + i*20)
+            self.enemyStatusLabels[i].move(600 , 340 + i*20)
 
 
         #画像生成　self.show()の前に作っておかないと表示されない＜ーなんで？
@@ -230,7 +246,6 @@ class MyWindow(QMainWindow):
         self.iconViewer = ImageViewer(self, x=450, y=100)
         #画像が表示される大きさを指定
         self.iconViewer.resize(200, 200)
-
 
     def setImage(self, image):
         #画像を選択後に呼び出される
@@ -277,6 +292,7 @@ class MyWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     w = MyWindow()
+    
     app.exec_()
             
 if __name__ == '__main__':
