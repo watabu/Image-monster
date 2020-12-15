@@ -301,11 +301,13 @@ class MyWindow(QMainWindow):
 
         self.actButton = QPushButton('たたかう', self)
         self.actButton.clicked.connect(self.testAct)
-        self.actButton.move(450, 440)
+        self.actButton.move(430, 440)
+        self.actButton.resize(130, 30)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
         self.actButton2.clicked.connect(self.testAct2)
         self.actButton2.move(600, 440)
+        self.actButton2.resize(130, 30)
         self.actButton2.setEnabled(False)
 
         #結果
@@ -372,6 +374,7 @@ class MyWindow(QMainWindow):
         self.battle = Battle(player, enemy)
         self.actButton.setEnabled(True)
         self.actButton2.setEnabled(True)
+        self.actButton2.setText(id2SkillName(self.battle.player.status.command))
         self.resultLabel.setText("")
         self.updateLabels(self.battle.player, self.battle.enemy)
         
@@ -444,6 +447,19 @@ class MyWindow(QMainWindow):
     
 def colorize(str, color):
     return "<font color=#" + color + ">"+str+"</font>"
+
+def id2SkillName(id):
+    if id == 1:
+        return "腕立て伏せ(攻撃UP)"
+    if id == 2:
+        return "腹筋(防御UP)"
+    if id == 3:
+        return "王水(防御DOWN)"
+    if id == 4:
+        return "くすぐる(攻撃DOWN)"
+    if id == 5:
+        return "100tハンマー"
+    
 
 
 def main():
