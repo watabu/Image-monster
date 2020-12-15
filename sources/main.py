@@ -49,7 +49,8 @@ class MonsterGenerator:
         paddingY = 30
         rect = (paddingX, paddingY, width-paddingX, height-paddingY)
 
-        itrCnt = 10
+        #itrCnt = 10
+        itrCnt = 3
 
         print('crop: grabCut started')
         cv2.grabCut(image, maskGC, rect, bgdModel, fgdModel, itrCnt, cv2.GC_INIT_WITH_RECT)
@@ -151,7 +152,7 @@ class MonsterGenerator:
         
 
     def generateMonster(self, image):
-        monster = Monster(self.crop(image))
+        monster = Monster(image)
         #monster.status = self.generateStatus(image)
         monster.status = self.generateStatus(image, True)
         return monster
@@ -337,7 +338,8 @@ class MyWindow(QMainWindow):
     def setImage(self, image):
         #画像を選択後に呼び出される
         #元画像と切り抜き後の画像をセットする
-        self.image = image
+        #self.image = image
+        self.image = self.generator.crop(image)
         self.player = self.generator.generateMonster(self.image)
 
         self.imageViewer.setImage(image)
