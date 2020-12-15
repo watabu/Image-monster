@@ -212,7 +212,20 @@ class Battle:
             return 1
 
         #敵がプレイヤーに攻撃する
-        self.player.take_damage(self.damage_calculator(self.enemy, self.player))
+        if random.randrange(2)==1:
+            self.player.take_damage(self.damage_calculator(self.enemy, self.player))
+        else:
+            if self.enemy.status.command==1:
+                self.enemy.status.attack=math.ceil(self.enemy.status.attack*1.5)
+            if self.enemy.status.command==2:
+                self.enemy.status.defence=math.ceil(self.enemy.status.defence*1.5)
+            if self.enemy.status.command==3:
+                self.player.status.defence=math.ceil(self.player.status.defence*0.8)
+            if self.enemy.status.command==4:
+                self.player.status.attack=math.ceil(self.player.status.attack*0.8)
+            if self.enemy.status.command==5:
+                self.player.take_damage(self.damage_calculator(self.enemy,self.player,1.5))
+
         print("mikatanohp",max(self.player.status.hp,0))
         #self.end_check(self.player.status.hp,1)
         if(self.player.isDead()):
