@@ -218,12 +218,6 @@ class Battle:
         damagebase=max(math.ceil(base*rando*power+geta),1)
         damage=math.ceil(damagebase*crit)*dodge
         return damage
-        
-    def end_check(self,hp,side):
-        if hp<=0:
-            print("戦闘終了")
-            #TODO その他、戦闘終了処理
-
     
     
 
