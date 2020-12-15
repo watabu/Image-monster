@@ -44,10 +44,12 @@ class MonsterGenerator:
 
         bgdModel = np.zeros(modelShape, np.float64)
         fgdModel = np.zeros(modelShape, np.float64)
-
-        paddingX = 30
-        paddingY = 30
-        rect = (paddingX, paddingY, width-paddingX, height-paddingY)
+        
+        paddingAbove = 60
+        paddingBelow = 70
+        paddingLeft = 30
+        paddingRight = 50
+        rect = (paddingLeft, paddingAbove, width-paddingRight, height-paddingBelow)
 
         #itrCnt = 10
         itrCnt = 3
