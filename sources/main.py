@@ -174,12 +174,12 @@ class Battle:
         if cri>=attack+50:
             base=max(attack,1)
             crit=1.5
-            print("critical!")
+            #print("critical!")
         else:
             crit=1
         if ddg<=defence/2:
             dodge=0
-            print("dodge!")
+            #print("dodge!")
         else:
             dodge=1
         
