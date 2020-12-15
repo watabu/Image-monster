@@ -157,16 +157,26 @@ class Battle:
         #1ターン行動するボタン
         self.button_act = None
 
-    def act_one_turn(self):
+    def act_one_turn(self,command=0):
         if self.player.isDead() or self.enemy.isDead():
             return -1
         self.player.attackResult = ""
         self.enemy.attackResult = ""
 
         #プレイヤーが敵に攻撃する
-        self.enemy.take_damage(self.damage_calculater(self.player,self.enemy))
-        print("tekinohp",max(self.enemy.status.hp,0))
-        #self.end_check(self.enemy.status.hp,0)
+        if command==0:
+            self.enemy.take_damage(self.damage_calculator(self.player.status.attack,self.enemy.status.defence))
+            print("tekinohp",max(self.enemy.status.hp,0))
+        if command==1:
+            self.player.status.attack=math.ceil(self.player.status.attack*2)
+        if command==2:
+            self.player.status.defence=math.ceil(self.player.status.defence*2)
+        if command==3:
+            self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
+        if command==4:
+            self.enemy.status.attack=math.ceil(self.enemy.status.attack*0.8)
+        if command==5:
+            self.enemy.take_damage(self.damage_calculator(self.player.status.attack,self.enemy.status.defence,1.5))
         if(self.enemy.isDead()):
             return 1
 
@@ -187,24 +197,26 @@ class Battle:
         defence = defencer.status.defence
 
         rando=random.uniform(0.5,1.5)
-        base=max(attack-defence,1)
+        base=max(attack-defence,0)
         cri=random.randrange(200)
         ddg=random.randrange(100)
+        geta=random.randrange(-30,30,1)
+        
         if cri>=attack+50:
-            base=max(attack,1)
             crit=1.5
             print("critical!")
             attacker.attackResult ="critical!" 
         else:
             crit=1
-        if ddg<=defence/2:
+        if ddg<=min(defence/2,50):
             dodge=0
             print("dodge!")
             defencer.attackResult ="dodge!"
         else:
             dodge=1
         
-        damage=math.ceil(base*rando*power*crit)*dodge
+        damagebase=max(math.ceil(base*rando*power+geta),1)
+        damage=math.ceil(damagebase*crit)*dodge
         return damage
         
     def end_check(self,hp,side):
