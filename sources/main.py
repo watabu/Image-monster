@@ -132,6 +132,7 @@ class MonsterGenerator:
         status.hp = max(1, round(hp_base1 * hp_freq * hp_color))
         status.attack = max(1, round(attack_base * attack_freq * attack_color))
         status.defence = max(1, round(defence_base * defence_freq * defence_color))
+        status.command=((status.attack+status.defence)%5)+1
         
         if debug:
             #テスト用の出力
@@ -145,7 +146,7 @@ class MonsterGenerator:
             print("atk(red) info: %f * %f * %f = %d" % (attack_base, attack_freq, attack_color, status.attack))
             print("def(blue) info: %f * %f * %f = %d" % (defence_base, defence_freq, defence_color, status.defence))
 
-            print("status:", status.hp, status.attack, status.defence)
+            print("status:", status.hp, status.attack, status.defence,status.command)
             print("")
             
         return status
@@ -198,9 +199,9 @@ class Battle:
             self.enemy.take_damage(self.damage_calculator(self.player,self.enemy))
             print("tekinohp",max(self.enemy.status.hp,0))
         if command==1:
-            self.player.status.attack=math.ceil(self.player.status.attack*2)
+            self.player.status.attack=math.ceil(self.player.status.attack*1.5)
         if command==2:
-            self.player.status.defence=math.ceil(self.player.status.defence*2)
+            self.player.status.defence=math.ceil(self.player.status.defence*1.5)
         if command==3:
             self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
         if command==4:
@@ -245,7 +246,7 @@ class Battle:
         else:
             dodge=1
         
-        damagebase=max(math.ceil(base*rando*power+geta),1)
+        damagebase=max(math.ceil((base*rando+geta)*power),1)
         damage=math.ceil(damagebase*crit)*dodge
         return damage
     
@@ -290,7 +291,7 @@ class MyWindow(QMainWindow):
         self.actButton.move(450, 440)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
-        #self.actButton2.clicked.connect(self.testAct)
+        self.actButton2.clicked.connect(self.testAct2())
         self.actButton2.move(600, 440)
         self.actButton2.setEnabled(False)
 
@@ -373,6 +374,12 @@ class MyWindow(QMainWindow):
         #asyncio.ensure_future(self.updateLabelsDelay(self.battle.player, self.battle.enemy, 1))
         #loop = asyncio.get_event_loop()
         #loop.run_until_complete(self.updateLabelsDelay(self.battle.player, self.battle.enemy,res, 1))
+        
+    def testAct2(self):
+        if(self.battle is None):
+            return
+        res = self.battle.act_one_turn(self.battle.player.status.command)
+        self.updateLabels(self.battle.player,self.battle.enemy,res,0.5)
 
     def updateLabels(self, player, enemy, res=0, delay=1):
         self.statusLabels[3].setText("waiting..")
