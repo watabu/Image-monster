@@ -291,7 +291,7 @@ class MyWindow(QMainWindow):
         self.actButton.move(450, 440)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
-        self.actButton2.clicked.connect(self.testAct2())
+        self.actButton2.clicked.connect(self.testAct2)
         self.actButton2.move(600, 440)
         self.actButton2.setEnabled(False)
 
@@ -299,11 +299,6 @@ class MyWindow(QMainWindow):
         self.resultLabel = QLabel("", self)
         self.resultLabel.move(450, 500)
         self.resultLabel.resize(300, 30)
-
-        #文字生成？
-
-        #label = QLabel("test", self)
-        #label.move(200, 20)
 
         #ステータス表示
         QLabel("player", self).move(450, 320)
@@ -340,10 +335,12 @@ class MyWindow(QMainWindow):
         #画像を選択後に呼び出される
         #元画像と切り抜き後の画像をセットする
         #self.image = image
+        self.imageViewer.setImage(image)
+        QCoreApplication.processEvents()
+        
         self.image = self.generator.crop(image)
         self.player = self.generator.generateMonster(self.image)
 
-        self.imageViewer.setImage(image)
         self.iconViewer.setImage(self.player.image)
 
         self.statusLabels[0].setText(colorize("hp: %d" %(self.player.status.hp), "090"))
