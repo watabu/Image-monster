@@ -8,6 +8,7 @@ import numpy as np
 import math
 import asyncio
 import time
+import glob
 from math import log
 from View import ImageViewer
 
@@ -308,12 +309,12 @@ class MyWindow(QMainWindow):
         self.actButton = QPushButton('たたかう', self)
         self.actButton.clicked.connect(self.testAct)
         self.actButton.move(430, 460)
-        self.actButton.resize(130, 30)
+        self.actButton.resize(130, 40)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
         self.actButton2.clicked.connect(self.testAct2)
         self.actButton2.move(600, 460)
-        self.actButton2.resize(130, 30)
+        self.actButton2.resize(130, 40)
         self.actButton2.setEnabled(False)
 
         #結果
@@ -376,7 +377,8 @@ class MyWindow(QMainWindow):
     def initBattle(self):
         player = self.player
 
-        enemyImage = cv2.imread("./sources/test.png")
+        #enemyImage = cv2.imread("./sources/test.png")
+        enemyImage = cv2.imread(choice_picture())
         enemyStatus = self.generator.generateStatus(enemyImage)
         enemy = Monster(enemyImage, enemyStatus)
 
@@ -474,6 +476,15 @@ def id2SkillName(id):
         return "もろばぎり\n(反動つき大ダメージ)"
     
 
+
+def choice_picture():
+    filePath = "./pictures/*.*"
+    reportfiles = [r.split('/')[-1] for r in glob.glob(filePath)]
+    #print(reportfiles)
+    image = ""
+    if(len(reportfiles) > 0):
+        image = random.choice(reportfiles)
+    return image
 
 def main():
     app = QApplication(sys.argv)
