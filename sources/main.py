@@ -8,6 +8,7 @@ import numpy as np
 import math
 import asyncio
 import time
+import glob
 import tkinter
 from PIL import Image, ImageTk
 from math import log
@@ -180,9 +181,9 @@ class MonsterGenerator:
         if debug:
             #テスト用の出力
             print("bgr: " , bgr_hist)
-            # print("sum:", sum_spec, log(sum_spec))
-            # print("high:", high, high_ratio, high_std)
-            # print("low:", low, low_ratio, low_std)
+            print("sum:", sum_spec, log(sum_spec))
+            print("high:", high, high_ratio, high_std)
+            print("low:", low, low_ratio, low_std)
             
             print("base * freq * color = value")
             print("hp(green) info : %f * %f * %f = %d" % (hp_base1, hp_freq, hp_color, status.hp))
@@ -209,9 +210,17 @@ class Status:
         self.attack = attack
         self.defence = defence
         self.command=((attack+defence)%5)+1
+        self.attackMulti = 1
+        self.defenceMulti = 1
     
     def print(self):
         print("status:", self.hp, self.attack, self.defence)
+    
+    def DEF(self):
+        return self.defence * self.defenceMulti
+
+    def ATK(self):
+        return self.attack * self.attackMulti
 
 class Battle:
     #プレイヤーとエネミーを初期化でもらってくる
@@ -236,19 +245,26 @@ class Battle:
             return -1
         self.player.attackResult = ""
         self.enemy.attackResult = ""
+        self.player.currentCommand = command
 
         #プレイヤーが敵に攻撃する
         if command==0:
             self.enemy.take_damage(self.damage_calculator(self.player,self.enemy))
             print("tekinohp",max(self.enemy.status.hp,0))
         if command==1:
-            self.player.status.attack=math.ceil(self.player.status.attack*1.5)
+            #self.player.status.attack=math.ceil(self.player.status.attack*1.5)
+            self.player.status.attackMulti += 0.5
         if command==2:
-            self.player.status.defence=math.ceil(self.player.status.defence*1.5)
+            #self.player.status.defence=math.ceil(self.player.status.defence*1.5)
+            self.player.status.defenceMulti += 0.5
         if command==3:
-            self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
+            #self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
+            self.enemy.status.defenceMulti -= 0.2
+            self.enemy.status.defenceMulti = max(self.enemy.status.defenceMulti, 0.2)
         if command==4:
-            self.enemy.status.attack=math.ceil(self.enemy.status.attack*0.8)
+            #self.enemy.status.attack=math.ceil(self.enemy.status.attack*0.8)
+            self.enemy.status.attackMulti -= 0.2
+            self.enemy.status.attackMulti = max(self.enemy.status.attackMulti, 0.2)
         if command==5:
             self.enemy.take_damage(self.damage_calculator(self.player, self.enemy,1.5))
         if(self.enemy.isDead()):
@@ -256,16 +272,24 @@ class Battle:
 
         #敵がプレイヤーに攻撃する
         if random.randrange(2)==1:
+            self.enemy.currentCommand = 0
             self.player.take_damage(self.damage_calculator(self.enemy, self.player))
         else:
+            self.enemy.currentCommand = self.enemy.status.command
             if self.enemy.status.command==1:
-                self.enemy.status.attack=math.ceil(self.enemy.status.attack*1.5)
+                #self.enemy.status.attack=math.ceil(self.enemy.status.attack*1.5)
+                self.enemy.status.attackMulti += 0.5
             if self.enemy.status.command==2:
-                self.enemy.status.defence=math.ceil(self.enemy.status.defence*1.5)
+                #self.enemy.status.defence=math.ceil(self.enemy.status.defence*1.5)
+                self.enemy.status.defenceMulti += 0.5
             if self.enemy.status.command==3:
-                self.player.status.defence=math.ceil(self.player.status.defence*0.8)
+                #self.player.status.defence=math.ceil(self.player.status.defence*0.8)
+                self.player.status.defenceMulti -= 0.2
+                self.player.status.defenceMulti = max(self.player.status.defenceMulti, 0.2)
             if self.enemy.status.command==4:
-                self.player.status.attack=math.ceil(self.player.status.attack*0.8)
+                #self.player.status.attack=math.ceil(self.player.status.attack*0.8)
+                self.player.status.attackMulti -= 0.2
+                self.player.status.attackMulti = max(self.player.status.attackMulti, 0.2)
             if self.enemy.status.command==5:
                 self.player.take_damage(self.damage_calculator(self.enemy,self.player,1.5))
 
@@ -280,8 +304,8 @@ class Battle:
         return 0
             
     def damage_calculator(self,attacker, defencer, power=1):
-        attack = attacker.status.attack
-        defence = defencer.status.defence
+        attack = attacker.status.attack * attacker.status.attackMulti
+        defence = defencer.status.defence * defencer.status.defenceMulti
 
         rando=random.uniform(0.5,1.5)
         base=max(attack-defence,0)
@@ -313,6 +337,7 @@ class Monster:
         self.status = status
         self.image = image
         self.attackResult = ""
+        self.currentCommand = ""
 
     def take_damage(self, attack):
         self.status.hp = max(0,self.status.hp-attack)
@@ -344,11 +369,13 @@ class MyWindow(QMainWindow):
 
         self.actButton = QPushButton('たたかう', self)
         self.actButton.clicked.connect(self.testAct)
-        self.actButton.move(450, 440)
+        self.actButton.move(430, 460)
+        self.actButton.resize(130, 40)
         self.actButton.setEnabled(False)
         self.actButton2 = QPushButton('たたかう2', self)
         self.actButton2.clicked.connect(self.testAct2)
-        self.actButton2.move(600, 440)
+        self.actButton2.move(600, 460)
+        self.actButton2.resize(130, 40)
         self.actButton2.setEnabled(False)
 
         #結果
@@ -363,7 +390,8 @@ class MyWindow(QMainWindow):
         self.statusLabels.append(QLabel("<font color=#900> attack: undefined</font>", self))
         self.statusLabels.append(QLabel("<font color=#009> defense: undefined</font>", self))
         self.statusLabels.append(QLabel("", self))
-        for i in range(0, 4):
+        self.statusLabels.append(QLabel("", self))
+        for i in range(0, 5):
             self.statusLabels[i].move(450 , 340 + i*20)
         
 
@@ -374,9 +402,11 @@ class MyWindow(QMainWindow):
         self.enemyStatusLabels.append(QLabel("<font color=#900> attack: undefined</font>", self))
         self.enemyStatusLabels.append(QLabel("<font color=#009> defense: undefined</font>", self))
         self.enemyStatusLabels.append(QLabel("", self))
-        for i in range(0, 4):
+        self.enemyStatusLabels.append(QLabel("", self))
+        for i in range(0, 5):
             self.enemyStatusLabels[i].move(600 , 340 + i*20)
-        QLabel("", self).move(450, 410)
+        
+        #QLabel("", self).move(450, 410)
 
         #画像生成　self.show()の前に作っておかないと表示されない＜ーなんで？
         self.imageViewer = ImageViewer(self, x=50, y=100)
@@ -400,21 +430,23 @@ class MyWindow(QMainWindow):
         self.iconViewer.setImage(self.player.image)
 
         self.statusLabels[0].setText(colorize("hp: %d" %(self.player.status.hp), "090"))
-        self.statusLabels[1].setText(colorize("attack: %d" %(self.player.status.attack), "900"))
-        self.statusLabels[2].setText(colorize("defense: %d" %(self.player.status.defence), "009"))
+        self.statusLabels[1].setText(colorize("attack: %d" %(self.player.status.ATK()), "900"))
+        self.statusLabels[2].setText(colorize("defense: %d" %(self.player.status.DEF()), "009"))
 
         self.initBattle()
 
     def initBattle(self):
         player = self.player
 
-        enemyImage = cv2.imread("./sources/test.png")
+        #enemyImage = cv2.imread("./sources/test.png")
+        enemyImage = cv2.imread(choice_picture())
         enemyStatus = self.generator.generateStatus(enemyImage)
         enemy = Monster(enemyImage, enemyStatus)
 
         self.battle = Battle(player, enemy)
         self.actButton.setEnabled(True)
         self.actButton2.setEnabled(True)
+        self.actButton2.setText(id2SkillName(self.battle.player.status.command))
         self.resultLabel.setText("")
         self.updateLabels(self.battle.player, self.battle.enemy)
         
@@ -440,9 +472,10 @@ class MyWindow(QMainWindow):
         self.actButton2.setEnabled(False)
 
         self.enemyStatusLabels[0].setText(colorize("hp: %d" %(enemy.status.hp), "090"))
-        self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.attack), "900"))
-        self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.defence), "009"))
+        self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.ATK()), "900"))
+        self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.DEF()), "009"))
         self.enemyStatusLabels[3].setText(enemy.attackResult)
+        self.enemyStatusLabels[4].setText(id2SkillName(enemy.currentCommand))
         if (res == 1):
             print("味方のかち")
             self.resultLabel.setText('<font color="RED"><h1>YOU WIN!<h1></font>')
@@ -451,9 +484,10 @@ class MyWindow(QMainWindow):
         time.sleep(delay)
         
         self.statusLabels[0].setText(colorize("hp: %d" %(player.status.hp), "090"))
-        self.statusLabels[1].setText(colorize("attack: %d" %(player.status.attack), "900"))
-        self.statusLabels[2].setText(colorize("defense: %d" %(player.status.defence), "009"))
+        self.statusLabels[1].setText(colorize("attack: %d" %(player.status.ATK()), "900"))
+        self.statusLabels[2].setText(colorize("defense: %d" %(player.status.DEF()), "009"))
         self.statusLabels[3].setText(player.attackResult)
+        self.statusLabels[4].setText(id2SkillName(player.currentCommand))
         if (res == 2):
             print("敵のかち")
             self.resultLabel.setText('<font color="BLUE"><h1>YOU LOSE...<h1></font>')
@@ -488,6 +522,30 @@ class MyWindow(QMainWindow):
 def colorize(str, color):
     return "<font color=#" + color + ">"+str+"</font>"
 
+def id2SkillName(id):
+    if id == 0:
+        return "こうげき"
+    if id == 1:
+        return "腕立て伏せ\n(攻撃UP)"
+    if id == 2:
+        return "腹筋\n(防御UP)"
+    if id == 3:
+        return "王水\n(防御DOWN)"
+    if id == 4:
+        return "くすぐる\n(攻撃DOWN)"
+    if id == 5:
+        return "もろばぎり\n(反動つき大ダメージ)"
+    
+
+
+def choice_picture():
+    filePath = "./pictures/*.*"
+    reportfiles = [r.split('/')[-1] for r in glob.glob(filePath)]
+    #print(reportfiles)
+    image = ""
+    if(len(reportfiles) > 0):
+        image = random.choice(reportfiles)
+    return image
 
 def main():
     app = QApplication(sys.argv)
