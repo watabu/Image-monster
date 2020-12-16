@@ -342,6 +342,11 @@ class MyWindow(QMainWindow):
         self.resultLabel.move(450, 500)
         self.resultLabel.resize(300, 30)
 
+        #ロード表記
+        self.loadLabel = QLabel("", self)
+        self.loadLabel.move(120, 460)
+        self.loadLabel.resize(300, 30)
+
         #ステータス表示
         QLabel("player", self).move(450, 320)
         self.statusLabels = []
@@ -381,9 +386,12 @@ class MyWindow(QMainWindow):
         #元画像と切り抜き後の画像をセットする
         #self.image = image
         self.imageViewer.setImage(image)
+        self.loadLabel.setText("<h1> loading...</h1>")
         QCoreApplication.processEvents()
         
         self.image = self.generator.crop(image)
+        self.loadLabel.setText("")
+        
         self.player = self.generator.generateMonster(self.image)
 
         self.iconViewer.setImage(self.player.image)
