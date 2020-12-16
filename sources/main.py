@@ -539,11 +539,11 @@ def id2SkillName(id):
     if id == 2:
         return "腹筋\n(防御UP)"
     if id == 3:
-        return "王水\n(防御DOWN)"
+        return "くすぐる\n(防御DOWN)"
     if id == 4:
-        return "くすぐる\n(攻撃DOWN)"
+        return "ささやく\n(攻撃DOWN)"
     if id == 5:
-        return "もろばぎり\n(反動つき大ダメージ)"
+        return "おおあばれ\n(反動つき大ダメージ)"
     
 
 
