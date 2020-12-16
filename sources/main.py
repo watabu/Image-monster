@@ -24,10 +24,11 @@ class MonsterGenerator:
         # ファイル選択ダイアログの表示
         file_name = QFileDialog.getOpenFileName(self.parent, 'Open file', './')     # 画像を選択してファイル名を取得
         if file_name[0] == '':
-            return    
+            return
        
         n = np.fromfile(file_name[0], dtype=np.uint8)# imreadだと日本語のファイル名に対応できないため，np.fromfileとcv2.imdecodeを使う
         image = cv2.imdecode(n, cv2.IMREAD_COLOR) 
+        image = cv2.resize(image, (512, 512))
         self.image = image
         #画像をセットする
         self.parent.setImage(image)
