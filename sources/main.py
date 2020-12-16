@@ -140,9 +140,9 @@ class MonsterGenerator:
         if debug:
             #テスト用の出力
             print("bgr: " , bgr_hist)
-            # print("sum:", sum_spec, log(sum_spec))
-            # print("high:", high, high_ratio, high_std)
-            # print("low:", low, low_ratio, low_std)
+            print("sum:", sum_spec, log(sum_spec))
+            print("high:", high, high_ratio, high_std)
+            print("low:", low, low_ratio, low_std)
             
             print("base * freq * color = value")
             print("hp(green) info : %f * %f * %f = %d" % (hp_base1, hp_freq, hp_color, status.hp))
@@ -169,9 +169,17 @@ class Status:
         self.attack = attack
         self.defence = defence
         self.command=((attack+defence)%5)+1
+        self.attackMulti = 1
+        self.defenceMulti = 1
     
     def print(self):
         print("status:", self.hp, self.attack, self.defence)
+    
+    def DEF(self):
+        return self.defence * self.defenceMulti
+
+    def ATK(self):
+        return self.attack * self.attackMulti
 
 class Battle:
     #プレイヤーとエネミーを初期化でもらってくる
@@ -203,13 +211,19 @@ class Battle:
             self.enemy.take_damage(self.damage_calculator(self.player,self.enemy))
             print("tekinohp",max(self.enemy.status.hp,0))
         if command==1:
-            self.player.status.attack=math.ceil(self.player.status.attack*1.5)
+            #self.player.status.attack=math.ceil(self.player.status.attack*1.5)
+            self.player.status.attackMulti += 0.5
         if command==2:
-            self.player.status.defence=math.ceil(self.player.status.defence*1.5)
+            #self.player.status.defence=math.ceil(self.player.status.defence*1.5)
+            self.player.status.defenceMulti += 0.5
         if command==3:
-            self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
+            #self.enemy.status.defence=math.ceil(self.player.status.defence*0.8)
+            self.enemy.status.defenceMulti -= 0.2
+            self.enemy.status.defenceMulti = max(self.enemy.status.defenceMulti, 0.2)
         if command==4:
-            self.enemy.status.attack=math.ceil(self.enemy.status.attack*0.8)
+            #self.enemy.status.attack=math.ceil(self.enemy.status.attack*0.8)
+            self.enemy.status.attackMulti -= 0.2
+            self.enemy.status.attackMulti = max(self.enemy.status.attackMulti, 0.2)
         if command==5:
             self.enemy.take_damage(self.damage_calculator(self.player, self.enemy,1.5))
         if(self.enemy.isDead()):
@@ -222,13 +236,19 @@ class Battle:
         else:
             self.enemy.currentCommand = self.enemy.status.command
             if self.enemy.status.command==1:
-                self.enemy.status.attack=math.ceil(self.enemy.status.attack*1.5)
+                #self.enemy.status.attack=math.ceil(self.enemy.status.attack*1.5)
+                self.enemy.status.attackMulti += 0.5
             if self.enemy.status.command==2:
-                self.enemy.status.defence=math.ceil(self.enemy.status.defence*1.5)
+                #self.enemy.status.defence=math.ceil(self.enemy.status.defence*1.5)
+                self.enemy.status.defenceMulti += 0.5
             if self.enemy.status.command==3:
-                self.player.status.defence=math.ceil(self.player.status.defence*0.8)
+                #self.player.status.defence=math.ceil(self.player.status.defence*0.8)
+                self.player.status.defenceMulti -= 0.2
+                self.player.status.defenceMulti = max(self.player.status.defenceMulti, 0.2)
             if self.enemy.status.command==4:
-                self.player.status.attack=math.ceil(self.player.status.attack*0.8)
+                #self.player.status.attack=math.ceil(self.player.status.attack*0.8)
+                self.player.status.attackMulti -= 0.2
+                self.player.status.attackMulti = max(self.player.status.attackMulti, 0.2)
             if self.enemy.status.command==5:
                 self.player.take_damage(self.damage_calculator(self.enemy,self.player,1.5))
 
@@ -243,8 +263,8 @@ class Battle:
         return 0
             
     def damage_calculator(self,attacker, defencer, power=1):
-        attack = attacker.status.attack
-        defence = defencer.status.defence
+        attack = attacker.status.attack * attacker.status.attackMulti
+        defence = defencer.status.defence * defencer.status.defenceMulti
 
         rando=random.uniform(0.5,1.5)
         base=max(attack-defence,0)
@@ -369,8 +389,8 @@ class MyWindow(QMainWindow):
         self.iconViewer.setImage(self.player.image)
 
         self.statusLabels[0].setText(colorize("hp: %d" %(self.player.status.hp), "090"))
-        self.statusLabels[1].setText(colorize("attack: %d" %(self.player.status.attack), "900"))
-        self.statusLabels[2].setText(colorize("defense: %d" %(self.player.status.defence), "009"))
+        self.statusLabels[1].setText(colorize("attack: %d" %(self.player.status.ATK()), "900"))
+        self.statusLabels[2].setText(colorize("defense: %d" %(self.player.status.DEF()), "009"))
 
         self.initBattle()
 
@@ -411,8 +431,8 @@ class MyWindow(QMainWindow):
         self.actButton2.setEnabled(False)
 
         self.enemyStatusLabels[0].setText(colorize("hp: %d" %(enemy.status.hp), "090"))
-        self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.attack), "900"))
-        self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.defence), "009"))
+        self.enemyStatusLabels[1].setText(colorize("attack: %d" %(enemy.status.ATK()), "900"))
+        self.enemyStatusLabels[2].setText(colorize("defense: %d" %(enemy.status.DEF()), "009"))
         self.enemyStatusLabels[3].setText(enemy.attackResult)
         self.enemyStatusLabels[4].setText(id2SkillName(enemy.currentCommand))
         if (res == 1):
@@ -423,8 +443,8 @@ class MyWindow(QMainWindow):
         time.sleep(delay)
         
         self.statusLabels[0].setText(colorize("hp: %d" %(player.status.hp), "090"))
-        self.statusLabels[1].setText(colorize("attack: %d" %(player.status.attack), "900"))
-        self.statusLabels[2].setText(colorize("defense: %d" %(player.status.defence), "009"))
+        self.statusLabels[1].setText(colorize("attack: %d" %(player.status.ATK()), "900"))
+        self.statusLabels[2].setText(colorize("defense: %d" %(player.status.DEF()), "009"))
         self.statusLabels[3].setText(player.attackResult)
         self.statusLabels[4].setText(id2SkillName(player.currentCommand))
         if (res == 2):
