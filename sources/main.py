@@ -8,6 +8,8 @@ import numpy as np
 import math
 import asyncio
 import time
+import tkinter
+from PIL import Image, ImageTk
 from math import log
 from View import ImageViewer
 
@@ -29,11 +31,41 @@ class MonsterGenerator:
         #画像をセットする
         self.parent.setImage(image)
 
+    def eventStart(self, event):
+        self.canvas.delete("rect")
+        self.canvas.create_rectangle(event.x, event.y, event.x + 1, event.y + 1, outline="red", tag="rect")
+        self.sx, self.sy = event.x, event.y
+    
+    def eventDraw(self, event):
+        self.canvas.coords("rect", self.sx, self.sy, max(0, min(self.i_w, event.x)), max(0, min(self.i_h, event.y)))
+    
+    def eventRelease(self, event):
+        sx, sy, ex, ey = [ round(n) for n in self.canvas.coords("rect") ]
+        self.rect_d = (sx, sy, ex, ey)
+        self.root.destroy()
+
+    def getRect(self, img):
+
+        self.root = tkinter.Tk()
+        self.root.attributes("-topmost", True)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_tk = ImageTk.PhotoImage(image = Image.fromarray(img_rgb))
+
+        self.canvas = tkinter.Canvas(self.root, bg="black", width=self.i_w, height=self.i_h)
+        self.canvas.create_image(0, 0, image=img_tk, anchor=tkinter.NW)
+
+        self.canvas.pack()
+        self.canvas.bind("<ButtonPress-1>", self.eventStart)
+        self.canvas.bind("<Button1-Motion>", self.eventDraw)
+        self.canvas.bind("<ButtonRelease-1>", self.eventRelease)
+        self.root.mainloop()
+
     #画像を切り抜く
     def crop(self, image):
         #TODO 切り抜き方法を工夫する
         height, width, dim = image.shape
-
+        self.i_h = height
+        self.i_w = width
         # 0: Background (cv2.GC_BGD)
         # 1: Foreground (cv2.GC_FGD)
         # 2: Probably Background (cv2.GC_PR_BGD)
@@ -44,15 +76,24 @@ class MonsterGenerator:
 
         bgdModel = np.zeros(modelShape, np.float64)
         fgdModel = np.zeros(modelShape, np.float64)
-        
-        paddingAbove = 60
-        paddingBelow = 70
-        paddingLeft = 30
-        paddingRight = 50
-        rect = (paddingLeft, paddingAbove, width-paddingRight, height-paddingBelow)
 
-        #itrCnt = 10
-        itrCnt = 3
+        self.getRect(image)
+        # paddingAbove = 60
+        # paddingBelow = 70
+        # paddingLeft = 30
+        # paddingRight = 50
+
+        # paddingAbove = int(height * 0.1)
+        # paddingBelow = int(height * 0.1)
+        # paddingLeft = int(width * 0.1)
+        # paddingRight = int(width * 0.1)
+
+        # rect = (paddingLeft, paddingAbove, width - paddingRight, height - paddingBelow)
+        rect_d = self.rect_d
+        rect = (rect_d[0], rect_d[1], rect_d[2]-rect_d[0], rect_d[3]-rect_d[1])
+
+        itrCnt = 15
+        #itrCnt = 3
 
         print('crop: grabCut started')
         cv2.grabCut(image, maskGC, rect, bgdModel, fgdModel, itrCnt, cv2.GC_INIT_WITH_RECT)
